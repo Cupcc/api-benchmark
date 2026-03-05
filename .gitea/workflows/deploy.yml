@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-deploy:
     runs-on: alpine # 确保你的 Gitea Runner 配置了对应的 label (如 ubuntu-latest)
+    defaults:
+      run:
+        shell: sh  # Alpine 无 bash，使用 sh (ash)
 
     steps:
       - name: Checkout Code
