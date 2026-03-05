@@ -29,9 +29,13 @@ const maxTokens = computed({
   get: () => settings.value.maxTokens,
   set: (v: number) => { settings.value = { ...settings.value, maxTokens: Math.max(10, Math.min(2000, v)) } },
 })
-const requestTimeoutMs = computed({
-  get: () => settings.value.requestTimeoutMs,
-  set: (v: number) => { settings.value = { ...settings.value, requestTimeoutMs: Math.max(5000, Math.min(120000, v)) } },
+const connectionTimeoutMs = computed({
+  get: () => settings.value.connectionTimeoutMs,
+  set: (v: number) => { settings.value = { ...settings.value, connectionTimeoutMs: Math.max(3000, Math.min(60000, v)) } },
+})
+const firstTokenTimeoutMs = computed({
+  get: () => settings.value.firstTokenTimeoutMs,
+  set: (v: number) => { settings.value = { ...settings.value, firstTokenTimeoutMs: Math.max(5000, Math.min(120000, v)) } },
 })
 </script>
 
@@ -99,7 +103,7 @@ const requestTimeoutMs = computed({
           placeholder="https://yunwu.ai/api/pricing_new"
         />
       </div>
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">每模型轮数</label>
           <input
@@ -121,9 +125,20 @@ const requestTimeoutMs = computed({
           />
         </div>
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">超时 (ms)</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">连接超时 (ms)</label>
           <input
-            v-model.number="requestTimeoutMs"
+            v-model.number="connectionTimeoutMs"
+            type="number"
+            min="3000"
+            max="60000"
+            step="1000"
+            class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-shadow"
+          />
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">首字超时 (ms)</label>
+          <input
+            v-model.number="firstTokenTimeoutMs"
             type="number"
             min="5000"
             max="120000"

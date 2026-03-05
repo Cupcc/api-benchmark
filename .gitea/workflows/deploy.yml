@@ -1,0 +1,46 @@
+name: Deploy to NAS Web Station
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # 确保你的 Gitea Runner 配置了对应的 label (如 ubuntu-latest)
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 使用 pnpm
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10 # 或者你想使用的 pnpm 版本
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Build Project
+        run: pnpm run build
+
+      # 将构建产物部署到群晖
+      - name: Deploy to Synology NAS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.NAS_IP }}
+          username: ${{ secrets.NAS_SSH_USERNAME }}
+          # password: ${{ secrets.NAS_SSH_PASSWORD }} # 也可以使用私钥 key: ${{ secrets.NAS_SSH_KEY }}
+          key: ${{ secrets.NAS_SSH_KEY }}
+          port: ${{ secrets.NAS_SSH_PORT }} # 默认 22，如群晖更改了 SSH 端口请在 Secret 中配置
+          source: "dist/"
+          target: "/volume1/docker/api-benchmark/"
+          # source: "dist/" 会将 dist 文件夹本身以及里面的内容复制到 target 目录下
+          # 最终的路径就是 /volume1/docker/api-benchmark/dist

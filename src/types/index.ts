@@ -50,7 +50,8 @@ export interface Settings {
   roundsPerModel: number
   testPrompt: string
   maxTokens: number
-  requestTimeoutMs: number
+  connectionTimeoutMs: number
+  firstTokenTimeoutMs: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -60,5 +61,6 @@ export const DEFAULT_SETTINGS: Settings = {
   roundsPerModel: 3,
   testPrompt: '请用100字介绍一下人工智能',
   maxTokens: 200,
-  requestTimeoutMs: 30_000,
+  connectionTimeoutMs: 5_000,   // 连接超时 5 秒
+  firstTokenTimeoutMs: 30_000,  // 首字超时 30 秒
 }
