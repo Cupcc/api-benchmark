@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: alphine # 确保你的 Gitea Runner 配置了对应的 label (如 ubuntu-latest)
+    runs-on: alpine # 确保你的 Gitea Runner 配置了对应的 label (如 ubuntu-latest)
 
     steps:
       - name: Checkout Code
