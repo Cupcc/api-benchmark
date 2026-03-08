@@ -7,36 +7,47 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: alpine # 确保你的 Gitea Runner 配置了对应的 label (如 ubuntu-latest)
+    # 直接使用 runner 中映射到 Node 20 的镜像，避免额外切换 Node 版本
+    runs-on: ubuntu-20.04
     defaults:
       run:
-        shell: sh  # Alpine 无 bash，使用 sh (ash)
+        shell: bash
+    env:
+      COREPACK_HOME: ${{ github.workspace }}/.corepack
+      PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 使用 pnpm
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - name: Restore pnpm caches
+        uses: actions/cache@v4
         with:
-          version: 10 # 或者你想使用的 pnpm 版本
+          path: |
+            .corepack
+            .pnpm-store
+          key: ${{ runner.os }}-pnpm-10-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-10-
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-          cache-dependency-path: pnpm-lock.yaml
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.29.2 --activate
+          pnpm --version
 
       - name: Install Dependencies
-        run: pnpm install
+        run: |
+          pnpm config set store-dir "$PNPM_STORE_DIR"
+          pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build Project
         run: pnpm run build
 
       - name: Install SSH Client
-        run: apk add --no-cache openssh-client
+        run: |
+          apt-get update
+          apt-get install -y openssh-client
 
       - name: Configure SSH Key
         env:
