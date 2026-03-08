@@ -39,6 +39,11 @@ jobs:
       - name: Install Dependencies
         run: |
           pnpm config set store-dir "$PNPM_STORE_DIR"
+          pnpm config set network-concurrency 4
+          pnpm config set fetch-timeout 120000
+          pnpm config set fetch-retries 5
+          pnpm config set fetch-retry-mintimeout 10000
+          pnpm config set fetch-retry-maxtimeout 60000
           pnpm install --frozen-lockfile --prefer-offline
 
       - name: Build Project
