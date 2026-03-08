@@ -27,6 +27,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install Dependencies
         run: pnpm install
@@ -34,28 +35,29 @@ jobs:
       - name: Build Project
         run: pnpm run build
 
+      - name: Install SSH Client
+        run: apk add --no-cache openssh-client
+
+      - name: Configure SSH Key
+        env:
+          NAS_SSH_KEY: ${{ secrets.NAS_SSH_KEY }}
+          NAS_IP: ${{ vars.NAS_IP }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$NAS_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "${{ vars.NAS_SSH_PORT }}" "$NAS_IP" >> ~/.ssh/known_hosts
+
       - name: Prepare Target Directory
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ vars.NAS_IP }}
-          username: ${{ vars.NAS_SSH_USER }}
-          key: ${{ secrets.NAS_SSH_KEY }}
-          port: ${{ vars.NAS_SSH_PORT }}
-          script: |
+        run: |
+          ssh -p "${{ vars.NAS_SSH_PORT }}" "${{ vars.NAS_SSH_USER }}@${{ vars.NAS_IP }}" '
             mkdir -p /volume1/docker/api-benchmark/
             rm -rf /volume1/docker/api-benchmark/dist
+          '
 
       # 将构建产物部署到群晖
       - name: Deploy to Synology NAS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ vars.NAS_IP }}
-          username: ${{ vars.NAS_SSH_USER }}
-          # password: ${{ secrets.NAS_SSH_PASSWORD }} # 也可以使用私钥 key: ${{ secrets.NAS_SSH_KEY }}
-          key: ${{ secrets.NAS_SSH_KEY }}
-          port: ${{ vars.NAS_SSH_PORT }} # 默认 22，如群晖更改了 SSH 端口请在 Secret 中配置
-          source: "dist/"
-          target: "/volume1/docker/api-benchmark/"
-          overwrite: true
-          # source: "dist/" 会将 dist 文件夹本身以及里面的内容复制到 target 目录下
-          # 最终的路径就是 /volume1/docker/api-benchmark/dist
+        run: |
+          scp -P "${{ vars.NAS_SSH_PORT }}" -r dist "${{ vars.NAS_SSH_USER }}@${{ vars.NAS_IP }}:/volume1/docker/api-benchmark/"
+          # 上面会把整个 dist 目录复制到目标目录下
+          # 最终路径是 /volume1/docker/api-benchmark/dist
