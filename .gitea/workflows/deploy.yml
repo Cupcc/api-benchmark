@@ -34,6 +34,17 @@ jobs:
       - name: Build Project
         run: pnpm run build
 
+      - name: Prepare Target Directory
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.NAS_IP }}
+          username: ${{ vars.NAS_SSH_USER }}
+          key: ${{ secrets.NAS_SSH_KEY }}
+          port: ${{ vars.NAS_SSH_PORT }}
+          script: |
+            mkdir -p /volume1/docker/api-benchmark/
+            rm -rf /volume1/docker/api-benchmark/dist
+
       # 将构建产物部署到群晖
       - name: Deploy to Synology NAS
         uses: appleboy/scp-action@v0.1.7
@@ -45,5 +56,6 @@ jobs:
           port: ${{ vars.NAS_SSH_PORT }} # 默认 22，如群晖更改了 SSH 端口请在 Secret 中配置
           source: "dist/"
           target: "/volume1/docker/api-benchmark/"
+          overwrite: true
           # source: "dist/" 会将 dist 文件夹本身以及里面的内容复制到 target 目录下
           # 最终的路径就是 /volume1/docker/api-benchmark/dist
