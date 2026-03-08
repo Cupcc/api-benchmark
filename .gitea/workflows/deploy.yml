@@ -7,8 +7,8 @@ on:
 
 jobs:
   build-and-deploy:
-    # 直接使用 runner 中映射到 Node 20 的镜像，避免额外切换 Node 版本
-    runs-on: ubuntu-20.04
+    # 直接使用 runner 中映射到 Node 24 的镜像，避免额外切换 Node 版本
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -49,10 +49,13 @@ jobs:
       - name: Build Project
         run: pnpm run build
 
-      - name: Install SSH Client
+      - name: Ensure SSH Client
         run: |
-          apt-get update
-          apt-get install -y openssh-client
+          if ! command -v ssh >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y openssh-client
+          fi
+          ssh -V
 
       - name: Configure SSH Key
         env:
