@@ -57,15 +57,17 @@ jobs:
           fi
           ssh -V
 
-      - name: Configure SSH Key
+      - name: Configure SSH
         env:
           NAS_SSH_KEY: ${{ secrets.NAS_SSH_KEY }}
-          NAS_IP: ${{ vars.NAS_IP }}
+          NAS_KNOWN_HOSTS: ${{ secrets.NAS_KNOWN_HOSTS }}
         run: |
-          mkdir -p ~/.ssh
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          umask 077
           printf '%s\n' "$NAS_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p "${{ vars.NAS_SSH_PORT }}" "$NAS_IP" >> ~/.ssh/known_hosts
+          printf '%s\n' "$NAS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_rsa ~/.ssh/known_hosts
 
       - name: Prepare Target Directory
         run: |
